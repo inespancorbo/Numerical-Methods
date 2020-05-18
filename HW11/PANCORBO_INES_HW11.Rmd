@@ -1,0 +1,254 @@
+---
+title: "HW11"
+author: "Ines Pancorbo"
+date: "3/31/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 2) d.
+
+```{r}
+data <- read.csv("BoneMassData.txt", header = TRUE, sep = ' ', stringsAsFactors = TRUE)
+
+# only working with female
+data_f <- data[which(data$gender == "female"),]
+
+```
+
+First use a library:
+```{r}
+library(splines)
+
+sr <- lm(spnbmd ~ bs(age, knots = c(15, 20)), data=data_f)
+summary(sr)
+```
+
+```{r}
+# plotting data and spline
+plot(data_f$age, data_f$spnbmd, 
+     col = "grey")
+
+x <- data_f$age[order(data_f$age)]
+points(x, 
+       predict(sr, newdata=data.frame(age=x)),
+       col = "blue",
+       lwd = 2,
+       type = "l")
+
+# showing the knots
+abline(v = c(15,20), 
+       lty = 2, 
+       col = "black")
+```
+
+Now do from scratch:
+
+```{r}
+# Lets order the column data_f$age
+age <- data_f$age[order(data_f$age)]
+
+# From (c) we know what the basis functions are
+
+h0 <- rep(1,length(age))
+h1 <- age
+h2 <- age^2
+h3 <- age^3
+h4 <- ifelse((age-15)^3>0, (age-15)^3, 0)
+h5 <- ifelse((age-20)^3>0, (age-20)^3, 0)
+
+B <- cbind(h0, h1, h2, h3, h4, h5)
+
+# solving to get min (coefficients)
+min <- solve(t(B) %*% B, t(B) %*% data_f$spnbmd[order(data_f$age)])
+
+# Lets get spline y-values evaluated at our age values 
+# Just linear combination of basis functions with coefficients = min
+y <- B %*% min 
+
+# Lets plot
+plot(data_f$age, data_f$spnbmd, 
+     col = "grey")
+
+points(age, 
+       y,
+       col = "blue",
+       lwd = 2,
+       type = "l")
+
+# showing the knots
+abline(v = c(15,20), 
+       lty = 2, 
+       col = "black")
+```
+
+# 3)
+
+```{r}
+# difference functions
+
+one_sided_diff <- function(h){
+  return((exp(h) - 1)/h)
+}
+
+two_sided_diff <- function(h){
+  return((exp(h) - exp(-h))/(2*h))
+}
+```
+
+```{r}
+options(digits=16)
+
+i <- seq(-20,0)
+h <- 10^i
+
+# getting the differences
+one_diff <- sapply(h, one_sided_diff)
+two_diff <- sapply(h, two_sided_diff)
+
+# calculating error
+error_one <- abs(one_diff-1)
+error_two <- abs(two_diff-1)
+
+# use -log in base 10 to solve for the abs of the exponent, n, 
+# of the above error, which has approx form 10^(-n)
+same_digits_one <- ceiling(-log10(error_one))
+same_digits_two <- ceiling(-log10(error_two))
+```
+
+```{r}
+# printing table that displays for each h value, its one-sided difference, 
+# the error when compared to the actual derivative, 
+# and how many digits in the one-sided difference are correct
+cbind(h, one_diff, error_one, same_digits_one)
+```
+In terms of floating point error for one-sided differences: From the lecture video, in order to minimize the error you need to pick an $h$ equal to machine epsilon ^ 1/2. That is you need to pick an h = $10^{-8}$. This will give you the smallest possible error, which is of the order $h$. 
+
+If you look at what was printed above: at $h=10^{-8}$ the error is of the order $10^{-9},$ which is around what it should be ($10^{-8}$). So the relationship between machine epsilon and the minimum error of one-sided differences holds for this example.
+
+Now: for the two-sided differences.
+```{r}
+# printing table that displays for each h value, its two-sided difference, 
+# the error when compared to the actual derivative, 
+# and how many digits in the two-sided difference are correct
+cbind(h, two_diff, error_two, same_digits_two)
+```
+In terms of floating point error for two-sided differences: From the lecture video, in order to minimize the error you need to pick an $h$ equal to machine epsilon ^ 1/3. That is you need to pick an h = $10^{-16/3}$ which is approx $10^{-5}$. This will give you the smallest possible error, which is of the order $h^2$. 
+
+If you look at what was printed above: at $h=10^{-5}$ the error is of the order $10^{-11},$ which is approx $h^2=10^{-5 \cdot 2}.$ So the relationship between machine epsilon and the minimum error of two-sided differences holds for this example.
+
+```{r}
+plot(i,same_digits_two, type="l", col='blue', lwd=2)
+lines(i, same_digits_one, col='red')
+```
+
+Lastly, in terms of one-sided and two-sided differences: from the plots you can the two-sided difference does a better job at approximating the derivative of $e^x$ at $0$, since the error is lower (=> greater number of correct digits in the difference estimate). This makes sense given what was explained in the video, and holds for this example. 
+
+# 4)
+```{r}
+# choosing reasonable x: from the 68-95-99.7 rule, 
+# we could integrate until 3 (instead of infty) and we 
+# would get approx 99.7% of 1/2. To see what x would get us closer to 1/2:
+x <- 1
+while(pnorm(x)/2 < 1/2){
+  cat("number =", x, "prob =", pnorm(x)/2, "\n")
+  x <- x + 1
+}
+cat("number =", x, "prob =", pnorm(x)/2, "\n")
+```
+So 9 or above is a reasonable x choice. I'll round to 10 because grid is factors of 10.
+
+```{r}
+# Fapprox function 
+Fapprox <- function(n, method){
+  if (method=="riemann"){
+    h <- 10/n
+    partition <- seq(0,10,h)
+    f <- sapply(partition, dnorm)
+    return(sum(f*h))
+  } 
+  if (method=="trapezoid"){
+    h <- 10/n
+    partition <- seq(0,10,h)
+    f <- (sapply(partition[2:length(partition)], dnorm)+
+      sapply(partition[1:length(partition)-1], dnorm))/2
+    return(sum(f*h))
+  }
+  if (method=="useR"){
+    return(integrate(f=dnorm, 
+                     lower=0, 
+                     upper=10, 
+                     subdivisions=n, 
+                     stop.on.error=FALSE)$value)
+  }
+  else {return}
+} 
+```
+
+```{r}
+# plotting
+x <- seq(10, 10000, 10)
+df <- data.frame(n=x, 
+            riemann=sapply(x, Fapprox, method="riemann"),
+            trapezoid=sapply(x, Fapprox, method="trapezoid"),
+            useR=sapply(x, Fapprox, method="useR"))
+```
+
+```{r}
+library(ggplot2)
+ggplot(df, aes(x = n)) + 
+  geom_line(aes(y = riemann, color = "Riemann")) +
+  geom_line(aes(y = trapezoid, color = "Trapezoid")) +
+  geom_line(aes(y = useR, color = "UseR"))
+```
+
+In terms of accuracy: Riemann integration is the least accurate (you can see this from the graph). It ends up converging to $0.5$ but converges slower than the Trapezoid method and R's integration function. Also, in terms of Riemann and Trapezoid, this makes sense given that Riemann integrations' error is of order $h$, whereas the Trapezoid's method error is of order $h^2$ (=> the error gets small faster for Trapezoid). We can double-check this by looking at the $h, h^2$ values and Riemann/Trapezoid errors for the given grid of [10, 100, 1000, 10000]:
+
+```{r}
+n <- c(10, 100, 1000, 10000)
+riemann <- sapply(n, Fapprox, method="riemann")
+error_riemann <- abs(0.5-riemann)
+trapezoid <- sapply(n, Fapprox, method="trapezoid")
+error_trapezoid <- abs(0.5-trapezoid)
+useR=sapply(n, Fapprox, method="useR")
+
+df <- data.frame(n=n,
+            riemann=riemann,
+            h=10/n,
+            error_riemann=error_riemann,
+            trapezoid=trapezoid,
+            h_squared=(10/n)^2,
+            error_trapezoid=error_trapezoid,
+            useR=useR
+)
+
+df
+
+ggplot(df) + 
+  geom_point(aes(x=n, y = h, color = "h value")) +
+  geom_point(aes(x=n, y = error_riemann, color = "Riemann Error")) +
+  geom_vline(xintercept = 10, linetype="dashed", color="grey") +
+  geom_vline(xintercept = 100, linetype="dashed", color="grey") +
+  geom_vline(xintercept = 1000, linetype="dashed", color="grey") +
+  geom_vline(xintercept = 10000, linetype="dashed", color="grey") 
+
+
+
+```
+
+We know Riemann's error is of order $h$ (or less) and this is shown in the graph above for each grid point $n$ (grey dashed lines represent a grid point, red points are the $h$ values, which are above or on the blue points, the riemann error). Similarly, the Trapezoid method's error is of order $h^2$ (or less) and this is shown in the graph below (for each grid point $n$).
+
+```{r}
+ggplot(df) + 
+  geom_point(aes(x=n, y = h_squared, color = "h value")) +
+  geom_point(aes(x=n, y = error_trapezoid, color = "Trapezoid Error")) +
+  geom_vline(xintercept = 10, linetype="dashed", color="grey") +
+  geom_vline(xintercept = 100, linetype="dashed", color="grey") +
+  geom_vline(xintercept = 1000, linetype="dashed", color="grey") +
+  geom_vline(xintercept = 10000, linetype="dashed", color="grey") 
+
+```
+

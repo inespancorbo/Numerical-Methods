@@ -1,0 +1,145 @@
+---
+title: "HW9"
+author: "Ines Pancorbo"
+date: "3/13/2020"
+output: pdf_document
+---
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+
+# 2. c) 
+
+```{r}
+norm <- function(x){
+  sqrt(sum(x^2))
+}
+
+GramSchmidt <- function(A){
+  Q <- matrix(0, nrow=nrow(A), ncol=nrow(A)) 
+  Q[,1] <- A[,1]/norm(A[,1])
+  
+  for (i in 2:nrow(A)){
+    Qt <- A[,i]
+    for (j in 1:(i-1)){
+      Qt <- Qt - (t(A[,i]) %*% Q[,j]) * Q[,j]
+    }
+    Q[,i] <- Qt/norm(Qt)
+  }
+  return(Q)
+}
+```
+
+```{r}
+A <- matrix(runif(16), nrow=4, ncol=4)
+Q <- GramSchmidt(A)
+Q
+```
+```{r}
+qr.Q(qr(A))
+```
+From above, the columns of Q from GramSchmidt() function are the same as the columns of the Q obtained via R (except some columns are multiplied by $-1$ but this doesn't affect orthonormality or the equality of the spans since $-1$ is just a scalar).
+
+# 4
+
+# a)
+
+```{r}
+setwd("/Users/inespancorbo/MATH504/HW9")
+senators <- read.table("senators_formatted.txt", header = T, stringsAsFactors = F)
+votes <- read.table("votes_formatted.txt", header = T, stringsAsFactors = F) 
+V <- t(as.matrix(votes[,-1])) 
+```
+
+```{r}
+# center data
+mean <- colMeans(V) 
+V <- V - rep(mean, rep.int(nrow(V), ncol(V)))
+
+# covariance matrix
+omega <- t(V) %*% V
+```
+
+```{r}
+power_iteration <- function(A, start) {
+  start1 <- matrix(start[,1],nrow=ncol(A), ncol = 1)/norm(start[,1])
+  start2 <- matrix(start[,2],nrow=ncol(A), ncol = 1)/norm(start[,2])
+  RQ1 <- t(start1) %*% A %*% start1
+  RQ2 <- t(start2) %*% A %*% start2
+  
+  repeat {
+    
+    start <- A %*% start
+    start <- qr.Q(qr(start))
+    
+    start1 <- matrix(start[,1],nrow=ncol(A), ncol = 1)/norm(start[,1])
+    start2 <- matrix(start[,2],nrow=ncol(A), ncol = 1)/norm(start[,2])
+    
+    new_RQ1 <- t(start1) %*% A %*% start1
+    new_RQ2 <- t(start2) %*% A %*% start2
+    
+    if (abs(new_RQ1 - RQ1) < 10^-10 && abs(new_RQ2 - RQ2) < 10^-10){
+      break 
+    }
+    else{
+      RQ1 <- new_RQ1
+      RQ2 <- new_RQ2
+    }
+  }
+
+  return (list(eigenvectors=start, lambda1=RQ1, lambda2=RQ2)) 
+}
+```
+
+
+```{r}
+# Computing the first two dominant eigenvectors
+start <- matrix(runif(ncol(omega)*2), nrow=ncol(omega), ncol=2)
+power_iteration_result <- power_iteration(omega, start)
+v1 <- power_iteration_result$eigenvectors[,1]
+v2 <- power_iteration_result$eigenvectors[,2]
+
+# I am going to double check convergence
+cat(power_iteration_result$lambda1, power_iteration_result$lambda2, "\n")
+cat(eigen(omega)$values[order(abs(eigen(omega)$values), decreasing = T)][1:2])
+```
+
+From above one can see that convergence happened. So we can use the two eigenvectors calculated via power_iteration().
+
+# b)
+
+```{r}
+# compute projection coefficients
+c <- V %*% v1
+
+# coloring according to party affiliation
+color <- ifelse(senators$party == "R", 'red', ifelse(senators$party == "D", 'blue', 'black'))
+
+# 1-dim plot
+y <- rep(0, length(c))
+plot(c, y, col = color)
+```
+
+```{r}
+# variance preserved from 1-d projection
+eigen(omega)$values[order(abs(eigen(omega)$values), decreasing = T)][1]/sum(eigen(omega)$values)
+```
+
+# c)
+
+```{r}
+# compute projection coefficients
+c <- V %*% power_iteration_result$eigenvectors
+
+# 2-dim plot
+c1 <- c[,1]
+c2 <- c[,2]
+plot(c1, c2, col = color)
+```
+
+```{r}
+# variance kept from 2-d projection
+sum(eigen(omega)$values[order(abs(eigen(omega)$values), decreasing = T)][1:2])/sum(eigen(omega)$values)
+```
+

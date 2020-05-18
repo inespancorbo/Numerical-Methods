@@ -1,0 +1,445 @@
+---
+title: "HW14"
+author: "Ines Pancorbo"
+date: "4/27/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 2 b)
+
+```{r}
+library("ggplot2")
+A <- as.matrix(read.csv("user-shows.txt", header = F, sep = ' ', stringsAsFactors = T))
+colnames(A) <- NULL
+rownames(A) <- NULL
+
+# rank of matrix A
+qr(A)$rank
+```
+
+```{r}
+# compute svd of A
+svd <- svd(A)
+
+# get singular values of A
+singular_values <- svd$d
+length(singular_values)
+
+# plot singular values of A
+ggplot() +
+  geom_point(aes(x = singular_values, 
+                 y = rep(0, length(singular_values))), 
+             size = 2, color = 'deepskyblue4', alpha = 0.5) +
+  theme_classic() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank() ) +
+  xlab("Singular Values") + ylab("") 
+```
+
+**How many singular values would accurately approximate this matrix?**
+
+From the plot of singular values above it looks like there are two singular values that dominate, so it would make sense that the best rank $2$ approximation of $A$ (so $2$ singular values) would "accurately" approximate this matrix. Accuracy would mean a balance between the amount of variance the $k$ rank approximation ($k$ singular values) preserves and the rank. Ideally, you would want a low rank (so for example, you can project onto a low-dimensional subspace) and a corresponding approximation that preserves much of the variance. However, there is usually a trade-off between variance and rank (the more variance you want to preserve, usually the higher rank you need). For our case it would be nice to see if the $2$ rank approximation of $A$ captures much (say approx $80$% +) of the variance in $A$.
+
+```{r}
+variance_captured <- function(k) sum(singular_values[k]^2)/sum(singular_values^2)
+x <- seq(1, ncol(A), 1)
+y <- sapply(x, variance_captured)
+df <- data.frame(x = x, y = y)
+
+p <- ggplot(df, aes(x, y))
+p + geom_point(alpha = 0.5, color = 'deepskyblue4') + 
+  geom_text(data = subset(df, y > y[3]),
+            aes(x, y, label = paste(sprintf("%0.2f", round(y*100, digits = 2)),"%")), 
+            size = 4, hjust = 0, vjust = 1) +
+  theme_bw() + 
+  xlab("") + ylab("variance captured in %") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  ggtitle("Variance Captured by Each of the 563 Singular Values of Matrix A") +
+  theme(
+      plot.title = element_text(size = 14, hjust = 0.5)
+  )
+```
+The plot above tells us the same thing as the previous plot: There are two singular values that dominate, and we can see how the rank $1$ approx to $A$ $s_1u^{(1)}(v^{(1)})^T$ captures $25.46$% of the variance in $A$, and the rank $1$ approx to $A$ $s_2u^{(2)}(v^{(2)})^T$ captures $4.93$% of the variance in $A$. Both these approximations capture more variance than any of the other rank $1$ approximations. We can also see that the rank $2$ approximation of $A$ $s_1u^{(1)}(v^{(1)})^T+s_2u^{(2)}(v^{(2)})^T$ captures around $30$% of the variance in $A$. We can argue that $30$% is small but we are considering a rank $2$ approximation to $A$. The next plot shows how much higher the rank would have to be (how many more singular values to keep) in order for us to capture more of the variance of $A$.
+
+```{r}
+cum_variance_captured <- function(k) sum(singular_values[1:k]^2)/sum(singular_values^2)
+x <- seq(1, ncol(A), 1)
+y <- sapply(x, cum_variance_captured)
+df <- data.frame(x = x,y = y)
+
+# How many singular would preserve around 80% of A's variance?
+y[y > 0.8][1]
+match(y[y > 0.8][1], y)
+
+```
+So we can see that to capture around $80$% or more of the variance of $A$ we would have to keep at least $194$ singular values (i.e., we can think of projecting onto a $194$ or higher dimensional subspace). 
+
+```{r}
+# How many singular would preserve around 50% of A's variance?
+y[y > 0.5][1]
+match(y[y > 0.5][1], y)
+```
+So we can see that to capture around $50$% or more of the variance of $A$ we would have to keep at least $24$ singular values (i.e., we can think of projecting onto a $24$ or higher dimensional subspace). 
+
+```{r}
+p <- ggplot(df, aes(x, y))
+p + geom_point(alpha = 0.5, color = 'deepskyblue4') + 
+  geom_text(data = df[df$x %in% c(2, 24, 194),,],
+            aes(x,y,label = 
+                  paste(sprintf("%0.2f", round(y*100, digits = 2)),"%")), 
+            size = 4, hjust = 0, vjust = 1) +
+  theme_bw() + 
+  xlab("space dimension")+ylab("variance captured in %") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+```
+
+From the plot, if we wanted to keep $80$% or more of $A$'s variance we would have to approximate $A$ with a $194$ rank or higher matrix (thinking in terms of this problem of shows/users, projecting onto a $194$ or higher dimensional subspace), which might be excessive. Even if we only wanted to preserve around half of the variance we would have to approximate $A$ with a $24$ rank matrix (project onto a $24$ dimensional subspace in terms of this problem of shows/users). So we can argue that keeping $2$ singular values would "accurately" approximate $A$, accurate in the sense that we are trying to balance rank and variance preserved by that rank approximation to $A$.
+
+# 2 c)
+
+Matrix $A$ is a $9985$ by $563$ matrix. The rows correspond to TV users and the columns correspond to TV shows. So we have $563$ TV shows and $9985$ TV users. And therefore, $A$ maps TV users to TV shows. 
+
+We are interested in (1) projecting the users onto a two dimensional PCA space and (2) projecting the shows onto a two dimensional PCA space. Like we did in previous HWs we could do the following for (1) and (2):
+
+For (1) we would deal with matrix $A$ since the rows of that matrix are the users. To compute its first two principal components we would compute the first two dominant eigenvectors, $q^{(1)}, q^{(2)}$ of $A$'s covariance matrix, $A^TA$. We would then project onto the space spanned by $q^{(1)}, q^{(2)}$. Let $Q=(q^{(1)} q^{(2)})$. Then we would compute $AQ$, where the first and second columns would have the coefficients needed to plot the 2-dimensional projections of the users.
+
+For (2) we would deal with matrix $A^T$ since the rows of that matrix are the shows. To compute its first two principal components we would compute the first two dominant eigenvectors, $k^{(1)}, k^{(2)}$ of $A^T$'s covariance matrix, $AA^T$. We would then project onto the space spanned by $k^{(1)}, k^{(2)}$. Let $K=(k^{(1)} k^{(2)})$. Then we would compute $A^TK$, where the first and second columns would have the coefficients needed to plot the 2-dimensional projections of the shows.
+
+However, as seen in the lecture videos there is another way to do (1) and (2) via the SVD of $A$. Given the SVD of $A$, i.e., $A=USV^T$ we know the columns of $V$ are the eigenvectors of $A^TA$, i.e., the principal components of $A$. So we will do (1) by projecting the users onto the two dimensional space spanned by $v^{(1)},v^{(2)}$. Similarly, we know the columns of $U$ are the eigenvectors of $AA^T$, i.e., the principal components of $A^T$. So we will do (2) by projecting the shows onto the two dimensional space spanned by $u^{(1)},u^{(2)}$.
+
+```{r}
+# get U and V
+U <- svd$u
+V <- svd$v
+
+Q <- V[,1:2]
+K <- U[,1:2]
+```
+
+
+```{r}
+# 2-dim coefficients for users
+users_p <- A %*% Q
+
+# 2-dim coefficients for shows
+shows_p <- t(A) %*% K
+
+
+# plotting users
+ggplot() +
+  geom_point(aes(x = users_p[,1], y = users_p[,2]), alpha = 0.5, size = 1) +
+  theme_bw() + 
+  xlab("principal component 1") + ylab("principal component 2") +
+  ggtitle("Projection of Users onto 2-dim PCA Space") +
+  theme(
+      plot.title = element_text(size = 14, hjust = 0.5)
+  )
+
+# plotting shows
+ggplot() +
+  geom_point(aes(x = shows_p[,1], y = shows_p[,2]), alpha = 0.5, size = 1) + 
+  theme_bw() + 
+  xlab("principal component 1") + ylab("principal component 2") +
+  ggtitle("Projection of Shows onto 2-dim PCA Space") +
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+
+# let's save our 2-d show coordinates in a dataframe
+coefficients_shows <- data.frame(x = shows_p[,1], y = shows_p[,2])
+```
+
+To recommend movies for Alex an approach would be to consider shows close to the shows we know he likes
+
+```{r}
+show_names <- as.matrix(read.csv("shows.txt", header = F, sep = ' '))
+```
+
+```{r}
+set.seed(23)
+# We could find the 5 closest shows to one show Alex likes
+# But lets get 5 shows Alex likes, and find a show close to each 
+# of these 5
+shows <- which(A[500,] == 1)[runif(5, 1, 50)]
+shows
+
+# Let's get the names of these shows
+show_names[shows,]
+```
+
+```{r}
+# Let's plot those 5 shows Alex likes in red and all other shows in grey
+p <- ggplot(coefficients_shows, aes(x, y))
+p + geom_point(color = 'grey', alpha = 0.5) + 
+  geom_point(data = coefficients_shows[shows,],
+            aes(x, y), color = 'red', alpha = 0.5) +
+  geom_text(data = coefficients_shows[shows,],
+            aes(x, y, label = show_names[shows,]), size = 2, hjust = 0, vjust = 1) +
+  theme_bw() + 
+  xlab("principal component 1") + ylab("principal component 2") +
+  ggtitle("Projection of Shows onto 2-dim PCA Space") +
+  theme(
+      plot.title = element_text(size = 14, hjust = 0.5)
+  )
+```
+
+
+```{r}
+norm <- function(x) sqrt(sum(x^2))
+# getting the 2-dim coordinates for the 5 shows Alex likes
+show1 <- shows_p[shows[1],]
+show2 <- shows_p[shows[2],]
+show3 <- shows_p[shows[3],]
+show4 <- shows_p[shows[4],]
+show5 <- shows_p[shows[5],]
+
+# getting all coordinates for the first 100 shows for which 
+# Alex's ratings where zeroed out
+c <- t(cbind(shows_p[1:100,1], shows_p[1:100,2]))
+
+# calculating the distances between each the first 100 shows 
+# and each of the 5 selected shows
+# Then, sorting distances and choosing the 
+# smallest distance, returning the corresponding index
+recommended1 <- sort(apply(c-show1, MARGIN = 2, FUN = norm), 
+                     decreasing = F, index.return = T)$ix[1]
+recommended2 <- sort(apply(c-show2, MARGIN = 2, FUN = norm), 
+                     decreasing = F, index.return = T)$ix[1]
+recommended3 <- sort(apply(c-show3, MARGIN = 2, FUN = norm), 
+                     decreasing = F, index.return = T)$ix[1]
+recommended4 <- sort(apply(c-show4, MARGIN = 2, FUN = norm), 
+                     decreasing = F, index.return = T)$ix[1]
+recommended5 <- sort(apply(c-show5, MARGIN = 2, FUN = norm), 
+                     decreasing = F, index.return = T)$ix[1]
+
+# collecting all indexes of the recommended shows
+r <- c(recommended1, recommended2, recommended3, recommended4, recommended5)
+```
+
+
+```{r}
+# Lets plot the shows we know Alex likes (in red) and
+# the shows recommended (in green)
+p <- ggplot(coefficients_shows, aes(x, y))
+p + geom_point(color = 'grey', alpha = 0.5) + 
+  geom_point(data = coefficients_shows[shows,],
+            aes(x,y), color = 'red', alpha = 0.5) +
+  geom_text(data = coefficients_shows[shows,],
+            aes(x, y, label = show_names[shows,]), size = 2, hjust = 0, vjust = 1) +
+  geom_point(data = coefficients_shows[r,],
+            aes(x,y),color = 'green', alpha = 0.5) +
+  geom_text(data = coefficients_shows[r,],
+            aes(x, y, label = show_names[r,]), size = 2, hjust = 1, vjust = 0) +
+  theme_bw() + 
+  xlab("principal component 1") + ylab("principal component 2") +
+  ggtitle("Projection of Shows onto 2-dim PCA Space") +
+  theme(
+      plot.title = element_text(size = 14, hjust = 0.5)
+  )
+```
+
+Let's check if Alex actually likes those shows labeled green
+
+```{r}
+# Read in the shows Alex rated
+# We just care about the first 100, which were zeroed out
+shows_Alex_rated <- as.matrix(read.csv("alex.txt", header = F, sep = ' ', stringsAsFactors = T))[1:100]
+
+
+data.frame(show_liked = show_names[shows],
+           recommended_show = show_names[r],
+           real_rating_of_recommended = shows_Alex_rated[r], 
+           pred_rating_of_recommended = rep(1,5))
+```
+We can see that it turns out that Alex only likes $2$ out of the $5$ shows recommended. So we are $40$% accurate. If we were to recommend at random: we note that out of the $100$ first shows, he actually likes $19$ of these. So at random we would recommend $5/5$ shows he likes with an accuracy of $0.015$% and recommend $2/5$ shows he likes with an accuracy of $19.38$%. So the SVD performs better than random when recommending shows for Alex.
+
+```{r}
+# how many shows Alex likes out of first 100
+length(which(shows_Alex_rated[1:100] == 1))
+# random accuracy
+choose(19,2)*choose(81,3)/choose(100,5)*100
+choose(19,5)/choose(100,5)*100
+```
+
+# 3 b)
+
+```{r}
+MyKmeans <- function(x, K){
+  # Let's work with dataframes to ease plotting
+  # Randomly assign datapoints to clusters
+  data <- data.frame(x, assignment = sample.int(K, nrow(x), replace = T))
+  # Create empty dataframe for mean of clusters
+  centers <- data.frame(matrix(, nrow = ncol(x), ncol = K))
+  
+  iter <- 1
+  repeat{
+    # compute cluster centers
+    for (i in 1:K){
+      centers[, i] <- colMeans(subset(data[,1:ncol(x)], data$assignment == i))
+    }
+    
+    ############################ plotting to visualize #############################
+    print(ggplot(data, aes(V1, V2, colour = as.factor(assignment))) +
+            geom_point() + 
+            scale_colour_manual(values = c("seagreen1", "indianred1")) + 
+            annotate("point", x = t(centers)[, 1], y = t(centers)[, 2], 
+                     size = 6, shape = 17, colour = c("seagreen2", "indianred1")) +
+            theme_bw() + 
+            ggtitle(paste("Iteration = ", iter)) +
+            xlab("") + ylab("") +
+            theme(legend.title = element_blank(),
+                  plot.title = element_text(size = 14, face = 'bold', hjust = 0.5)))
+    ################################################################################
+    
+    old_assignment <- data$assignment
+    # assign points to closest centers
+    for(i in 1:nrow(x)){
+      data$assignment[i] <- which.min(apply(x[i,]-centers, MARGIN = 2, FUN = norm))
+    }
+    
+    # stopping condition
+    if(identical(old_assignment, data$assignment)){
+      break
+    }
+    
+    iter <- iter + 1
+  }
+  return(list(data = data, centers = centers, iter = iter))
+}
+```
+
+**Explain why the kmeans algorithm is a descent algorithm.**
+
+The kmeans algorithm is as follows:
+
+Initialize assignments, $a^{(i)}, i=1,2, \cdots, N$, randomly
+
+Repeat until stopping condition $\{$
+
+\setlength{\leftskip}{1cm}
+ 
+For $j,$ 
+
+\setlength{\leftskip}{2cm}
+
+$\mu_j := \frac{\displaystyle \sum_{i=1}^{N} \chi_{\{a^{(i)}=j\}}x^{(i)}}{\displaystyle \sum_{i=1}^{N} \chi_{\{a^{(i)}=j\}}}$
+
+\setlength{\leftskip}{1cm}
+
+For $i,$ 
+
+\setlength{\leftskip}{2cm}
+
+$a^{(i)} := \displaystyle \text{arg}\min_{j} ||x^{(i)}-\mu_j||$
+
+\setlength{\leftskip}{0cm}
+
+$\}$
+
+Defining the loss function, $L(a, \mu)= \displaystyle \sum_{i=1}^{N} ||x^{(i)}-\mu^{a^{(i)}}||^2,$ which measures the sum of squared distances between each of the $N$ datapoints $x^{(i)}$ and its assigned cluster center $\mu^{a^{(i)}}$. From the algorithm above, the inner-loop minimizes $L(a, \mu)$ first with respect to $\mu$ while fixing $a$ (showed to be the mean in $3$a) and then minimizes $L(a, \mu)$ with respect to $a$ while fixing $\mu$. So, at each iteration of the loop, $L(a, \mu)$ monotonically decreases, which implies we have a descent algorithm. Essentially, kmeans algorithm is an example of a coordinate descent algorithm. However, $L(a, \mu)$ is non-convex so we are not guarenteed to converge to the global minimum (which is why R's built-in function has an option to run kmeans many times, using different random values for the initialization, and returns the assignments and cluster centers that resulted in the lowest $L(a, \mu)$).
+
+# 3 (c)
+
+```{r}
+set.seed(2)
+x <- as.matrix(read.csv("synthetic kmeans data.csv", header = T, stringsAsFactors = T))
+kmeans_soln <- MyKmeans(x,2)
+# number of iterations
+kmeans_soln$iter
+# optimal means are at
+kmeans_soln$centers[,1]
+kmeans_soln$centers[,2]
+# let's compare with R's kmeans function
+# to check we get the same result
+r <- kmeans(x, 2, nstart = 20)
+r$centers[1,]
+r$centers[2,]
+```
+
+
+# 3 (d)
+
+```{r}
+data <- read.csv("tumor microarray data.csv", header = T)
+
+points <- data[,2:ncol(data)]
+cancer <- data[,1]
+```
+
+See below for a breakdown of cancer cells by cancer type
+
+```{r}
+cancer_freq_table <- data.frame(table(cancer))
+ggplot(cancer_freq_table, aes(cancer, Freq)) +
+  geom_col() +
+  scale_y_continuous(breaks = seq(1, 10, 1)) + 
+  geom_text(aes(label = Freq)) +
+  xlab("Cancer Type") +
+  theme_light() +
+  theme(axis.text.x = element_text(size = 8, angle = 90),
+        legend.position = "none")
+```
+
+Now lets see for different $k$ if the clusters formed separate the cancers
+
+```{r}
+library("dplyr")
+
+kmeans_plot <- function(k){
+  kmeans_soln <- kmeans(points, centers = k, nstart = 30)
+  df <- data.frame(cancer_type = cancer, cluster = kmeans_soln$cluster)
+  df <- df[order(df$cancer),]
+  df <- df %>% 
+    group_by(cancer_type) %>% 
+    mutate(x = row_number())
+  df <- mutate(df, y = as.integer(cancer_type))
+  
+  cancer_types <- unique(df$cancer_type)
+  
+  print(ggplot(df, aes(y, x, color = as.factor(cluster)), size = 8) +
+    geom_point() +
+    xlab("Cancer Type") + ylab("Freq") +
+    theme_classic() +
+    scale_x_continuous(breaks = seq(1, length(cancer_types), 1),
+                       labels = cancer_types) +
+    scale_y_continuous(breaks = seq(1, length(cancer_types), 1)) +
+    ggtitle(paste("k =", k)) +
+    scale_colour_discrete("Clusters") +
+    theme(axis.text.x = element_text(size = 8, angle = 90),
+          legend.key.size = unit(1,"line"),
+          plot.title = element_text(size = 14, face = 'bold', hjust = 0.5)))
+}
+```
+
+
+```{r}
+# We know there are 14 different types of cancer
+# Lets choose k = even integers between 2 and 18
+k <- seq(2,18,2)
+for(i in k){
+  kmeans_plot(i)
+}
+```
+
+In the plots above, each point represents one of the $64$ cancer cells in the data. And they are grouped together by cancer type. 
+
+In general we can see that kmeans is successful at grouping together cells of the same cancer. For example, for $k$ small (for example, $k=2,4$ even $6$) the clusters formed do separate some of the cancers. For example, for $k=4$, all points corresponding to LEUKEMIA cancer are together in cluster $2$, all points corresponding to COLON cancer are in cluster $3$, all points corresponding to RENAL cancer are in cluster $4$. However, three things to note:
+
+(1) As $k$ changes, cluster memberships change.
+
+(2) There are $14$ different types of cancer. So using a $k$ of $2$ (or a $k$ "small"), even though you see most of the cells of the same cancer type grouped together you won't see them grouped together with cells corresponding only to that cancer type. For $k$ of $2$ you essentially see all cells of type BREAST, CNS, MELANOMA, NSCLC, OVARIAN, PROSTATE, RENAL, and UNKNOWN in one cluster and the cells of the other $5$ types in another cluster. If you use a $k$ of $14$, you don't see $14$ clusters, each one corresponding to cancer type, either though. But with $k$ of $14$ kmeans is still able to do a realtively ok job at grouping cells by cancer type. For example, cells corresponding to RENAL almost form their own cluster, as do cells corresponding to COLON or MELANOMA.
+
+(3) Some interesting trends: (1) Some cells of certain cancer types are always grouped together in the same cluster no matter the value of $k$. For example, from the plots, the middle $7$ points (cells) in RENAL are clustered together for all values of $k$ tried. This applies to the top $6$ points (cells) in COLON. (2) It looks like certain cells of NSCLC, OVARIAN, and PROSTATE are grouped together for any value of $k$.
+
+Another note:
+
+You can usually find the optimal value of $k$. There are different methods. R has a built-in function for the "elbow method." The elbow method is based on minimizing the total within-cluster sum of squares. The total within-cluster sum of squares measures the compactness of the clustering and we want this to be as small as possible. A kink in the plot of the total within-cluster sum of squares would tell you the optimal $k$. In this case, there is no clear kink (maybe at $k=4, 9$?) so it is hard to conclude on an optimal $k$ value.
+
+```{r}
+library("factoextra")
+# Elbow method
+fviz_nbclust(points, kmeans, method = "wss") +
+  labs(subtitle = "Elbow method")
+```
