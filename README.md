@@ -1,4 +1,4 @@
-# Brief Summary of Material Covered
+# Brief Summary
 
 PART 1, Part 1
 - Linear Regression as an Optimization
