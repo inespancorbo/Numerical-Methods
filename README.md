@@ -1,71 +1,51 @@
 # Brief Summary
 
-PART 1, Part 1
+PART 1
 - Linear Regression as an Optimization
 - Optimization (convex, non-convex)
-
-PART 1, Part 2
 - Optimization of a quadratic function
 - Optimization of Sum of Squared Residual Loss Function/Linear Regression
 
-PART 2, Part 1
-- Course description
+PART 2
 - Logistic regression as a non-quadratic optimization
-
-PART 2, Part 2
 - the general optimization iteration
-- steepest ascent, backtracking
-- root finding:  bisection and Newton's method (see ROOT FINDING mp4 file)
+- gradient algorithms: steepest ascent/descent (backtracking, stochastic, mini-batch)
+- root finding: bisection and Newton's method
 
-PART 3, Part 1
+PART 3
 - Multi-dimensional Newton's method
-
-PART 3, Part 2
 - Gaussian elimination
-- Time and Space complexity 
+- Time and space complexity 
 
-PART 4, Part 1
+PART 4
 - Newton's method for optimization as root finding
 - Newton's method for optimization as quadratic optimization
-
-PART 4, Part 2
 - Spectral Decomposition Thm
 - Application of spectral decomposition to quadratics min/max/saddle
 
-PART 5, Part 1
+PART 5
 - why steepest descent zig-zags
 - why Newton's method chooses good directions
 - convex functions
+- computer arithmetic, error
 
-PART 5, Part 2
-- computer arithmetic
-
-PART 6, Part 1
+PART 6
 - Page rank algorithm
 - power iteration algorithm
-
-PART 6, Part 2
-- postive definite matrices
+- positive definite matrices
 - descent algorithms and descent directions
 - Newton's method as a descent algorithm for convex functions
 
-PART 7, Part 1
+PART 7
 - Condition number of matrices 
 - Condition numbers and round off error
-
-PART 7, Part 2
 - damped Newton's method and convex functions
 
-PART 8, Part 1
+PART 8
 - damped Newton's method with hessian modification
+- PCA and SVD
 
-PART 8, Part 2
-- PCA
-
-PART 9, Part 1
-- PCA continued
-
-PART 9, Part 2
+PART 9
 - QR decomposition
 - Gramm-Schmidt orthogonalization
 
