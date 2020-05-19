@@ -1,4 +1,4 @@
-# Brief Summary
+# Brief Summary of Topics
 
 PART 1
 - Linear Regression as an Optimization
@@ -60,3 +60,12 @@ PART 11
 PART 12
 - Neural Networks
 - Kernel Machines
+
+# Homeworks
+- [Homework 15](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW15)
+- [Homework 14](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW14)
+- [Homework 13](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW13)
+- [Homework 12](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW12)
+- [Homework 11](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW11)
+- [Homework 10](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW10)
+- [Homework 9](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW9)
