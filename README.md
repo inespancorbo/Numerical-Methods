@@ -1,6 +1,6 @@
 # Numerical Methods
 
-### Brief Summary of Topics
+### Brief Summary of Topics Dealt With in Homeworks
 PART 1
 - Linear Regression as an Optimization
 - Optimization (convex, non-convex)
