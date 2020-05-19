@@ -1,5 +1,6 @@
-# Brief Summary of Topics
+# Numerical Methods
 
+### Brief Summary of Topics
 PART 1
 - Linear Regression as an Optimization
 - Optimization (convex, non-convex)
@@ -60,8 +61,8 @@ PART 11
 PART 12
 - Neural Networks
 - Kernel Machines
-
-# Homeworks
+---
+### Homeworks
 - [Homework 15](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW15)
 - [Homework 14](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW14)
 - [Homework 13](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW13)
@@ -69,7 +70,7 @@ PART 12
 - [Homework 11](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW11)
 - [Homework 10](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW10)
 - [Homework 9](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW9)
-
-# eBooks Used
+---
+### eBooks Used
 - [Numerical Analysis by Sauer](https://github.com/inespancorbo/Numerical-Methods/blob/master/Numerical%20Analysis%20Sauer.pdf)
 - [Elements of Statistical Learning by Hastie et al.](https://github.com/inespancorbo/Numerical-Methods/blob/master/Elements%20of%20Statistical%20Learning%20-%20Tibshirani%20et.%20al.pdf)
