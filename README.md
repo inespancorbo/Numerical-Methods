@@ -61,6 +61,10 @@ PART 11
 PART 12
 - Neural Networks
 - Kernel Machines
+
+PART 13
+- Kernel Machines with Linear Regression, Logistic Regression
+- Kernel Machines with SVM
 ---
 ### Homeworks
 - [Homework 15](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW15)
