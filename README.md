@@ -63,8 +63,8 @@ PART 12
 - Kernel Machines
 
 PART 13
-- [Kernel Machines with Linear Regression](https://github.com/inespancorbo/Numerical-Methods/blob/master/Kernel-Machines.pdf) and Logistic Regression
-- Kernel Machines with SVM, Gaussian Kernel, Radial Basis Kernel
+- [Kernel Machines with Linear Regression](https://github.com/inespancorbo/Numerical-Methods/blob/master/Kernel-Machines.pdf) and Logistic Regression (unconstrained convex optimization examples)
+- Kernel Machines with SVM (constrained convex optimization example), Gaussian Kernel, Radial Basis Kernel
 ---
 ### Homeworks
 - [Homework 15](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW15)
