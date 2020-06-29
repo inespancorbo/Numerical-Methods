@@ -75,6 +75,6 @@ PART 13
 - [Homework 10](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW10)
 - [Homework 9](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW9)
 ---
-### eBooks Used
-- [Numerical Analysis by Sauer](https://github.com/inespancorbo/Numerical-Methods/blob/master/Numerical%20Analysis%20Sauer.pdf)
-- [Elements of Statistical Learning by Hastie et al.](https://github.com/inespancorbo/Numerical-Methods/blob/master/Elements%20of%20Statistical%20Learning%20-%20Tibshirani%20et.%20al.pdf)
+### Good Reading Material
+- Numerical Analysis by Sauer
+- Elements of Statistical Learning by Hastie et al.
