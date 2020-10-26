@@ -1,6 +1,6 @@
 # Numerical Methods
 
-### Summary of Topics Dealt With in Homeworks
+### Summary of Topics Dealt With in "Coding"/Non-Theory Homeworks
 PART 1
 - Linear Regression as an Optimization
 - Optimization (convex, non-convex)
