@@ -75,6 +75,7 @@ PART 13
 - [Homework 10](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW10)
 - [Homework 9](https://github.com/inespancorbo/Numerical-Methods/tree/master/HW9)
 ---
-### Good Reading Material
+### Textbooks
 - Numerical Analysis by Sauer
 - Elements of Statistical Learning by Hastie et al.
+- Pattern Recognition and Machine Learning by Christopher Bishop
